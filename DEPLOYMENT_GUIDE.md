@@ -63,35 +63,83 @@ ssh ubuntu@103.217.187.88
 http://103.217.187.88:5000
 ```
 
+## 一键问题排查与修复
+
+我们提供了一个自动化的检查和修复脚本，可以帮助您诊断并解决大多数部署问题：
+
+```bash
+# 登录服务器后执行
+cd /home/ubuntu/XYAssistant
+chmod +x server_check_and_fix.sh
+./server_check_and_fix.sh
+```
+
+该脚本会自动：
+- 检查端口5000是否正常开放
+- 配置防火墙规则（如果需要）
+- 检查并修复虚拟环境和依赖
+- 检查并重启Gunicorn服务
+- 创建必要的目录结构
+
 ## 常见问题排查
 
-### 如果服务无法启动
+### 1. 端口访问问题
 
-1. 检查 Gunicorn 日志：
-   ```bash
-   journalctl -u gunicorn --no-pager
-   ```
+如果无法访问网站，首先检查端口是否开放：
 
-2. 检查依赖是否安装正确：
-   ```bash
-   cd /home/ubuntu/XYAssistant
-   source venv/bin/activate
-   pip list
-   ```
+```bash
+# 检查端口5000是否被监听
+sudo netstat -tuln | grep 5000
 
-3. 尝试手动启动服务进行测试：
-   ```bash
-   cd /home/ubuntu/XYAssistant
-   source venv/bin/activate
-   gunicorn --bind 0.0.0.0:5000 wsgi:app
-   ```
+# 如果没有输出，说明服务未启动或端口被占用
+# 检查防火墙设置
+sudo ufw status
 
-### 数据库相关问题
+# 如果防火墙已启用，确保端口5000已开放
+sudo ufw allow 5000/tcp
+```
 
-应用使用 SQLite 数据库，默认存储在应用目录下。确保应用目录有写入权限：
+### 2. 服务无法启动
+
+```bash
+# 检查Gunicorn进程
+ps aux | grep gunicorn
+
+# 尝试手动启动（在虚拟环境中）
+cd /home/ubuntu/XYAssistant
+source venv/bin/activate
+# 前台运行以便查看错误信息
+gunicorn --bind 0.0.0.0:5000 wsgi:app
+```
+
+### 3. 依赖问题
+
+```bash
+cd /home/ubuntu/XYAssistant
+source venv/bin/activate
+# 重新安装依赖
+pip install --upgrade pip
+pip install -r requirements.txt
+pip install gunicorn
+```
+
+### 4. 权限问题
+
+应用使用 SQLite 数据库，确保应用目录有写入权限：
 
 ```bash
 chmod -R 755 /home/ubuntu/XYAssistant
+mkdir -p /home/ubuntu/XYAssistant/static/uploads
+chmod -R 775 /home/ubuntu/XYAssistant/static/uploads
+```
+
+### 5. 连接超时问题
+
+如果应用响应缓慢或超时，可能需要调整Gunicorn配置：
+
+```bash
+# 使用更多的worker进程
+gunicorn --bind 0.0.0.0:5000 wsgi:app --daemon --workers 4 --timeout 300
 ```
 
 ## 更新应用
