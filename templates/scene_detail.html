@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ scene.name }} - 兴业银行柜员SOP助手</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #0b3d91;
+            --secondary-color: #1456b8;
+            --accent-color: #2f80ed;
+            --light-bg: #f4f8ff;
+        }
+
+        body {
+            background: #f9fcff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .scene-header {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .step-card {
+            background: white;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .step-card:hover {
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.12);
+            transform: translateY(-2px);
+        }
+
+        .step-card.active {
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .step-number {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+
+        .transaction-code {
+            background: #e8f1fd;
+            color: var(--primary-color);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+
+        .step-details {
+            background: var(--light-bg);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .step-details.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .detail-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .detail-section h6 {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.9) !important;
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            color: white !important;
+        }
+
+        .badge-category {
+            background: var(--accent-color);
+            color: white;
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+        }
+
+        .pre-line {
+            white-space: pre-line;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <img src="/static/img/logo.png" alt="logo" style="height:28px;" class="me-2">
+                兴业银行柜员SOP助手
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/">
+                    <i class="bi bi-arrow-left me-1"></i>返回首页
+                </a>
+                {% if current_user.is_authenticated and current_user.role == 'admin' %}
+                <a class="nav-link" href="/admin/scene/{{ scene.id }}/edit">
+                    <i class="bi bi-pencil-square me-1"></i>编辑场景
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容 -->
+    <div class="container mt-4">
+        <!-- 场景标题区域 -->
+        <div class="scene-header">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h1 class="h2 mb-2">{{ scene.name }}</h1>
+                    <p class="lead mb-2">{{ scene.description }}</p>
+                    <span class="badge-category">{{ scene.category }}</span>
+                </div>
+                <div class="text-end">
+                    <div class="text-muted small mb-1">
+                        <div><i class="bi bi-person-badge me-1"></i>创建：{{ scene.creator_department or '—' }} {{ scene.creator_name or '—' }} · {{ scene.created_at.strftime('%Y-%m-%d %H:%M') if scene.created_at else '' }}</div>
+                        <div><i class="bi bi-pencil-square me-1"></i>修改：{{ scene.updater_department or '—' }} {{ scene.updater_name or '—' }} · {{ scene.updated_at.strftime('%Y-%m-%d %H:%M') if scene.updated_at else '' }}</div>
+                    </div>
+                    <div class="text-muted mb-2">
+                        <i class="bi bi-list-check me-1"></i>{{ scene.steps|length }} 个操作步骤
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-outline-primary" onclick="expandAllSteps()">
+                            <i class="bi bi-arrows-expand me-1"></i>展开全部
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="collapseAllSteps()">
+                            <i class="bi bi-arrows-collapse me-1"></i>收起全部
+                        </button>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-outline-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-file-arrow-down me-1"></i>导出
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="/scene/{{ scene.id }}/export/html"><i class="bi bi-filetype-html me-2"></i>导出为HTML（推荐，含完整样式和图片）</a></li>
+                                <li><a class="dropdown-item" href="/scene/{{ scene.id }}/export/docx"><i class="bi bi-filetype-docx me-2"></i>导出为Word文档（适合办公编辑）</a></li>
+                                <li><a class="dropdown-item" href="/scene/{{ scene.id }}/export/pdf"><i class="bi bi-file-earmark-pdf me-2"></i>导出为PDF（适合打印查看）</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 操作步骤 -->
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-list-check me-2"></i>操作步骤
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if scene.steps %}
+                    <div class="steps-container">
+                        {% for step in scene.steps %}
+                        <div class="step-card" id="step-{{ step.id }}">
+                            <div class="card-body">
+                                <div class="d-flex align-items-start">
+                                    <div class="step-number">{{ step.step_number }}</div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="card-title mb-1">{{ step.description }}</h6>
+                                        {% if step.transaction_code %}
+                                        <div class="mt-2">
+                                            <span class="transaction-code">{{ step.transaction_code }}</span>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-sm btn-outline-primary toggle-details"
+                                                data-step-id="{{ step.id }}">
+                                            <i class="bi bi-chevron-down"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="step-details" id="details-{{ step.id }}">
+                                    {% if step.details %}
+                                    <div class="detail-section">
+                                        <h6><i class="bi bi-journal-text me-1"></i>操作说明</h6>
+                                        <div class="pre-line">{{ step.details }}</div>
+                                    </div>
+                                    {% endif %}
+
+                                    <div class="detail-section">
+                                        <h6><i class="bi bi-exclamation-triangle me-1"></i>步骤详情及注意事项</h6>
+                                        <div id="notes-{{ step.id }}">
+                                            <!-- 注意事项将通过JavaScript动态加载 -->
+                                            <div class="text-center py-3">
+                                                <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                                                加载中...
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% if step.image_url %}
+                                    <div class="detail-section">
+                                        <h6><i class="bi bi-image me-1"></i>步骤配图</h6>
+                                        <img src="{{ step.image_url }}" alt="步骤图片" class="img-fluid rounded border">
+                                    </div>
+                                    {% endif %}
+
+                                    {% if step.condition %}
+                                    <div class="detail-section">
+                                        <h6><i class="bi bi-filter me-1"></i>执行条件</h6>
+                                        <div>{{ step.condition }}</div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-info text-center py-4">
+                        <i class="bi bi-info-circle display-4 d-block mb-3"></i>
+                        <h5>此场景暂无步骤说明</h5>
+                        <p class="mb-0">请联系管理员添加步骤说明</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 风险提示 -->
+        <div class="card mt-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-exclamation-triangle me-2"></i>风险提示
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <h6>重要风险点:</h6>
+                    <ul class="mb-0">
+                        <li>请严格按照操作步骤执行，确保业务规范</li>
+                        <li>注意客户身份核实，防范冒用风险</li>
+                        <li>仔细检查交易代码和系统返回信息</li>
+                        <li>现金业务必须经过清分和复核</li>
+                        <li>如发现异常情况，立即暂停业务并报告主管</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 步骤详情展开/收起功能
+        document.querySelectorAll('.toggle-details').forEach(button => {
+            button.addEventListener('click', function() {
+                const stepId = this.getAttribute('data-step-id');
+                const details = document.getElementById(`details-${stepId}`);
+                const stepCard = document.getElementById(`step-${stepId}`);
+                const icon = this.querySelector('i');
+
+                // 切换详情显示
+                details.classList.toggle('show');
+                stepCard.classList.toggle('active');
+
+                // 切换图标
+                if (details.classList.contains('show')) {
+                    icon.classList.remove('bi-chevron-down');
+                    icon.classList.add('bi-chevron-up');
+
+                    // 加载注意事项
+                    loadStepNotes(stepId);
+                } else {
+                    icon.classList.remove('bi-chevron-up');
+                    icon.classList.add('bi-chevron-down');
+                }
+            });
+        });
+
+        // 加载步骤注意事项
+        function loadStepNotes(stepId) {
+            const notesContainer = document.getElementById(`notes-${stepId}`);
+
+            // 如果已经加载过，不再重复加载
+            if (notesContainer.getAttribute('data-loaded') === 'true') {
+                return;
+            }
+
+            fetch(`/get_step_details/${stepId}`)
+                .then(response => response.json())
+                .then(data => {
+                    // 根据步骤内容生成相应的注意事项
+                    const notes = generateStepNotes(data);
+                    notesContainer.innerHTML = notes;
+                    notesContainer.setAttribute('data-loaded', 'true');
+                })
+                .catch(error => {
+                    notesContainer.innerHTML = '<div class="text-danger">加载失败，请刷新页面重试</div>';
+                });
+        }
+
+        // 根据步骤信息生成注意事项
+        function generateStepNotes(stepData) {
+            const description = stepData.description.toLowerCase();
+            let notes = '<ul class="mb-0">';
+
+            if (description.includes('银行卡')) {
+                notes += '<li>确认银行卡无损坏、磁条/芯片可读</li>';
+                notes += '<li>检查银行卡是否在有效期内</li>';
+                notes += '<li>如为芯片卡，优先使用芯片读取</li>';
+            }
+
+            if (description.includes('身份核实') || description.includes('三必问')) {
+                notes += '<li>三必问必须完整执行，不可遗漏</li>';
+                notes += '<li>注意观察客户反应，如有异常及时上报</li>';
+                notes += '<li>对于可疑交易，可要求提供辅助证件</li>';
+            }
+
+            if (description.includes('1159') || description.includes('卡状态')) {
+                notes += '<li>仔细检查1159返回的各项状态</li>';
+                notes += '<li>特别注意"只收不付"和"不收不付"状态</li>';
+                notes += '<li>确认可用余额足够，非活期余额不能用于取款</li>';
+                notes += '<li>如反洗钱等级为次高风险及以上，需特别关注</li>';
+            }
+
+            if (description.includes('2520') || description.includes('取款')) {
+                notes += '<li>确认取款金额与客户需求一致</li>';
+                notes += '<li>输入金额后需与客户再次确认</li>';
+                notes += '<li>注意检查系统返回的交易结果</li>';
+            }
+
+            if (description.includes('签名')) {
+                notes += '<li>确保客户在指定区域签名</li>';
+                notes += '<li>检查签名是否清晰可辨</li>';
+                notes += '<li>如为电子签名，确认设备正常工作</li>';
+            }
+
+            if (description.includes('提交') || description.includes('交易')) {
+                notes += '<li>提交前再次确认交易信息</li>';
+                notes += '<li>等待系统返回成功响应</li>';
+                notes += '<li>如遇系统繁忙，勿重复提交</li>';
+            }
+
+            if (description.includes('现金') || description.includes('清分')) {
+                notes += '<li>现金必须经过点钞机清分</li>';
+                notes += '<li>注意识别假币，特别是高仿假币</li>';
+                notes += '<li>新旧版人民币均需仔细检查</li>';
+            }
+
+            if (description.includes('交付') || description.includes('确认金额')) {
+                notes += '<li>交付现金时必须唱票</li>';
+                notes += '<li>提醒客户当面点清金额</li>';
+                notes += '<li>提示客户注意资金安全</li>';
+                notes += '<li>建议客户及时核对账户余额</li>';
+            }
+
+            // 默认注意事项
+            if (notes === '<ul class="mb-0">') {
+                notes += '<li>严格按照操作规范执行</li>';
+                notes += '<li>注意风险防控</li>';
+                notes += '<li>如遇异常情况及时上报主管</li>';
+            }
+
+            notes += '</ul>';
+            return notes;
+        }
+
+        // 展开所有步骤
+        function expandAllSteps() {
+            document.querySelectorAll('.toggle-details').forEach(button => {
+                const stepId = button.getAttribute('data-step-id');
+                const details = document.getElementById(`details-${stepId}`);
+                const icon = button.querySelector('i');
+
+                if (!details.classList.contains('show')) {
+                    details.classList.add('show');
+                    document.getElementById(`step-${stepId}`).classList.add('active');
+                    icon.classList.remove('bi-chevron-down');
+                    icon.classList.add('bi-chevron-up');
+
+                    // 加载注意事项
+                    loadStepNotes(stepId);
+                }
+            });
+        }
+
+        // 默认展开第一个步骤
+        document.addEventListener('DOMContentLoaded', function() {
+            const firstStepButton = document.querySelector('.toggle-details');
+            if (firstStepButton) {
+                firstStepButton.click();
+            }
+        });
+
+        // 收起所有步骤
+        function collapseAllSteps() {
+            document.querySelectorAll('.toggle-details').forEach(button => {
+                const stepId = button.getAttribute('data-step-id');
+                const details = document.getElementById(`details-${stepId}`);
+                const icon = button.querySelector('i');
+                if (details.classList.contains('show')) {
+                    details.classList.remove('show');
+                    document.getElementById(`step-${stepId}`).classList.remove('active');
+                    icon.classList.remove('bi-chevron-up');
+                    icon.classList.add('bi-chevron-down');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if scene %}编辑场景{% else %}新建场景{% endif %} - 兴业银行SOP标准化助手</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #0b3d91;
+            --secondary-color: #1456b8;
+            --accent-color: #2f80ed;
+            --light-bg: #f4f8ff;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f7f9fc 0%, #eef3f9 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .page-header {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            padding: 2rem;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control, .form-select {
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.25);
+        }
+
+        .step-item {
+            background: var(--light-bg);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .step-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .step-number {
+            background: var(--primary-color);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            padding: 0.75rem 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(74, 144, 226, 0.4);
+        }
+
+        .btn-outline-primary {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+            border-radius: 8px;
+        }
+
+        .btn-outline-primary:hover {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-danger {
+            border-radius: 8px;
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.9) !important;
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            color: white !important;
+        }
+
+        .help-text {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <img src="/static/img/logo.png" alt="logo" style="height:28px;" class="me-2">
+                兴业银行柜员SOP助手
+            </a>
+            <div class="navbar-nav">
+                <a class="nav-link" href="/">首页</a>
+                <a class="nav-link" href="/admin/scenes">场景管理</a>
+                <a class="nav-link active" href="#">{% if scene %}编辑场景{% else %}新建场景{% endif %}</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容 -->
+    <div class="container mt-4">
+        <!-- 页面标题区域 -->
+        <div class="page-header">
+            <h1 class="h2 mb-0">{% if scene %}编辑场景{% else %}新建场景{% endif %}</h1>
+        </div>
+
+        <!-- 表单区域 -->
+        <div class="form-card">
+            <form method="POST">
+                <!-- 基础信息 -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">场景名称</label>
+                            <input type="text" class="form-control" id="name" name="name"
+                                   value="{{ scene.name if scene else '' }}" required
+                                   placeholder="例如：本人小额取款">
+                            <div class="help-text">使用简洁明了的中文描述，便于搜索查询</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="category" class="form-label">业务分类</label>
+                            <input type="text" class="form-control" id="category" name="category"
+                                   value="{{ scene.category if scene else '' }}" required
+                                   placeholder="例如：取款业务">
+                            <div class="help-text">描述此场景所属的业务类型</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="description" class="form-label">场景描述</label>
+                    <textarea class="form-control" id="description" name="description"
+                              rows="3" required placeholder="详细描述此业务场景的用途和特点">{{ scene.description if scene else '' }}</textarea>
+                    <div class="help-text">提供清晰的中文描述，便于用户理解场景用途</div>
+                </div>
+
+                <!-- 步骤管理 -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <label class="form-label mb-0">操作步骤</label>
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="addStep()">
+                            <i class="bi bi-plus-circle me-1"></i>添加步骤
+                        </button>
+                    </div>
+
+                    <div id="steps-container">
+                        {% if scene and scene.steps %}
+                            {% for step in scene.steps|sort(attribute='step_number') %}
+                            <div class="step-item">
+                                <div class="step-header">
+                                    <div class="d-flex align-items-center">
+                                        <div class="step-number">{{ loop.index }}</div>
+                                        <h6 class="mb-0">步骤 {{ loop.index }}</h6>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeStep(this)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">步骤描述</label>
+                                            <input type="text" class="form-control" name="steps[]"
+                                                   value="{{ step.description }}" required
+                                                   placeholder="例如：收取客户银行卡">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label class="form-label">交易代码</label>
+                                            <input type="text" class="form-control" name="transaction_codes[]"
+                                                   value="{{ step.transaction_code if step.transaction_code else '' }}"
+                                                   placeholder="例如：1159">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label class="form-label">执行条件</label>
+                                            <input type="text" class="form-control" name="conditions[]"
+                                                   value="{{ step.condition if step.condition else '' }}"
+                                                   placeholder="例如：金额≥5万">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">步骤图片（可选）</label>
+                                            <div class="input-group">
+                                                <input type="file" class="form-control" accept="image/*" 
+                                                       onchange="handleImageUpload(this, '{{ loop.index0 }}')">
+                                                <input type="hidden" name="image_urls[]" 
+                                                       value="{{ step.image_url if step.image_url else '' }}">
+                                            </div>
+                                            {% if step.image_url %}
+                                            <div class="mt-2">
+                                                <img src="{{ step.image_url }}" alt="步骤图片" class="img-thumbnail" style="max-height: 150px;">
+                                                <button type="button" class="btn btn-sm btn-danger mt-1"
+                                                        onclick="removeImage(this)">移除图片</button>
+                                            </div>
+                                            {% endif %}
+                                            <div class="help-text">支持PNG、JPG、JPEG、GIF、WebP格式图片</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">详细说明</label>
+                                    <textarea class="form-control" name="details[]" rows="3"
+                                              placeholder="详细的操作说明和注意事项">{{ step.details if step.details else '' }}</textarea>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="step-item">
+                                <div class="step-header">
+                                    <div class="d-flex align-items-center">
+                                        <div class="step-number">1</div>
+                                        <h6 class="mb-0">步骤 1</h6>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeStep(this)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">步骤描述</label>
+                                            <input type="text" class="form-control" name="steps[]"
+                                                   required placeholder="例如：收取客户银行卡">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label class="form-label">交易代码</label>
+                                            <input type="text" class="form-control" name="transaction_codes[]"
+                                                   placeholder="例如：1159">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label class="form-label">执行条件</label>
+                                            <input type="text" class="form-control" name="conditions[]"
+                                                   placeholder="例如：金额≥5万">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">步骤图片（可选）</label>
+                                            <div class="input-group">
+                                                <input type="file" class="form-control" accept="image/*"
+                                                       onchange="handleImageUpload(this, '0')">
+                                                <input type="hidden" name="image_urls[]">
+                                            </div>
+                                            <div class="help-text">支持PNG、JPG、JPEG、GIF、WebP格式图片</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">详细说明</label>
+                                    <textarea class="form-control" name="details[]" rows="3"
+                                              placeholder="详细的操作说明和注意事项"></textarea>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="help-text">
+                        <i class="bi bi-info-circle me-1"></i>
+                        每个步骤应包含清晰的描述，可选的交易代码和执行条件，以及详细的说明
+                    </div>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="d-flex align-items-center">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-1"></i>保存场景
+                    </button>
+                    <a href="/admin/scenes" class="btn btn-outline-primary ms-auto">取消</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let stepCounter = {{ scene.steps|length if scene else 1 }};
+
+        function addStep() {
+            stepCounter++;
+            const container = document.getElementById('steps-container');
+            const stepItem = document.createElement('div');
+            stepItem.className = 'step-item';
+            stepItem.innerHTML = `
+                <div class="step-header">
+                    <div class="d-flex align-items-center">
+                        <div class="step-number">${stepCounter}</div>
+                        <h6 class="mb-0">步骤 ${stepCounter}</h6>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeStep(this)">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+                <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">步骤描述</label>
+                                        <input type="text" class="form-control" name="steps[]"
+                                               required placeholder="例如：收取客户银行卡">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">交易代码</label>
+                                        <input type="text" class="form-control" name="transaction_codes[]"
+                                               placeholder="例如：1159">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">执行条件</label>
+                                        <input type="text" class="form-control" name="conditions[]"
+                                               placeholder="例如：金额≥5万">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">步骤图片（可选）</label>
+                                        <div class="input-group">
+                                            <input type="file" class="form-control" accept="image/*"
+                                                   onchange="handleImageUpload(this, stepCounter - 1)">
+                                            <input type="hidden" name="image_urls[]">
+                                        </div>
+                                        <div class="help-text">支持PNG、JPG、JPEG、GIF、WebP格式图片</div>
+                                    </div>
+                                </div>
+                            </div>
+                <div class="mb-3">
+                    <label class="form-label">详细说明</label>
+                    <textarea class="form-control" name="details[]" rows="3"
+                              placeholder="详细的操作说明和注意事项"></textarea>
+                </div>
+            `;
+            container.appendChild(stepItem);
+        }
+
+        function removeStep(button) {
+            const stepItem = button.closest('.step-item');
+            if (document.querySelectorAll('.step-item').length > 1) {
+                stepItem.remove();
+                updateStepNumbers();
+            } else {
+                alert('至少需要保留一个步骤');
+            }
+        }
+
+        // 处理图片上传
+        async function handleImageUpload(input, stepIndex) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                // 显示加载中
+                const inputGroup = input.closest('.input-group');
+                const originalContent = inputGroup.innerHTML;
+                inputGroup.innerHTML = '<div class="text-center py-2">图片上传中...</div>';
+
+                const response = await fetch('/upload/image', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (result.error) {
+                    alert('上传失败: ' + result.error);
+                    inputGroup.innerHTML = originalContent;
+                    return;
+                }
+
+                // 更新隐藏字段的值
+                const hiddenInput = inputGroup.querySelector('input[name="image_urls[]"]');
+                hiddenInput.value = result.url;
+
+                // 显示预览
+                inputGroup.innerHTML = `
+                    <input type="file" class="form-control" accept="image/*"
+                           onchange="handleImageUpload(this, ${stepIndex})">
+                    <input type="hidden" name="image_urls[]" value="${result.url}">
+                `;
+
+                // 添加预览区域
+                const previewHTML = `
+                    <div class="mt-2">
+                        <img src="${result.url}" alt="步骤图片" class="img-thumbnail" style="max-height: 150px;">
+                        <button type="button" class="btn btn-sm btn-danger mt-1"
+                                onclick="removeImage(this)">移除图片</button>
+                    </div>
+                `;
+                inputGroup.insertAdjacentHTML('afterend', previewHTML);
+                
+            } catch (error) {
+                console.error('上传错误:', error);
+                alert('上传失败，请重试');
+                // 恢复原始输入框
+                const inputGroup = input.closest('.input-group');
+                inputGroup.innerHTML = originalContent;
+            }
+        }
+
+        // 移除图片
+        function removeImage(button) {
+            const previewDiv = button.closest('div.mt-2');
+            const inputGroup = previewDiv.previousElementSibling;
+            const hiddenInput = inputGroup.querySelector('input[name="image_urls[]"]');
+            
+            hiddenInput.value = '';
+            previewDiv.remove();
+        }
+
+        function updateStepNumbers() {
+            const stepItems = document.querySelectorAll('.step-item');
+            stepItems.forEach((item, index) => {
+                const stepNumber = index + 1;
+                const numberElement = item.querySelector('.step-number');
+                const titleElement = item.querySelector('h6');
+
+                numberElement.textContent = stepNumber;
+                titleElement.textContent = `步骤 ${stepNumber}`;
+            });
+            stepCounter = stepItems.length;
+        }
+    </script>
+</body>
+</html>
