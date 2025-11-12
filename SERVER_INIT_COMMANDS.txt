@@ -1,0 +1,23 @@
+# 在服务器上手动执行以下命令来初始化环境
+
+# 1. 更新软件包列表并安装git
+sudo apt-get update
+sudo apt-get install -y git
+
+# 2. 创建XYAssistant目录并设置权限
+sudo mkdir -p /home/ubuntu/XYAssistant
+sudo chown ubuntu:ubuntu /home/ubuntu/XYAssistant
+sudo chmod 755 /home/ubuntu/XYAssistant
+
+# 3. 克隆GitHub仓库（使用实际仓库URL）
+cd /home/ubuntu/XYAssistant
+git clone https://github.com/cjluczy/XYAssistant.git .
+
+# 4. 执行检查和修复脚本
+chmod +x server_check_and_fix.sh
+./server_check_and_fix.sh
+
+# 5. 验证服务运行状态
+sudo systemctl status gunicorn  # 如果使用systemctl管理
+top | grep gunicorn  # 检查进程是否运行
+curl http://localhost:5000  # 测试本地访问
